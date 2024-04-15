@@ -43,6 +43,7 @@ local debuffHandler = require('debuffhandler');
 local patchNotes = require('patchNotes');
 local statusHandler = require('statushandler');
 local gdi = require('gdifonts.include');
+local try = require("try-catch").try
 
 -- =================
 -- = HXUI DEV ONLY =
@@ -845,63 +846,72 @@ end
 * desc : Event called when the Direct3D device is presenting a scene.
 --]]
 ashita.events.register('d3d_present', 'present_cb', function ()
-    local eventSystemActive = GetEventSystemActive();
+	try(function()
+		local eventSystemActive = GetEventSystemActive();
 
-	if (GetHidden() == false) then
-		if (not gConfig.showPlayerBar or (gConfig.playerBarHideDuringEvents and eventSystemActive)) then
-            playerBar.SetHidden(true);
-        else
-			playerBar.DrawWindow(gAdjustedSettings.playerBarSettings);
+		if (GetHidden() == false) then
+			if (not gConfig.showPlayerBar or (gConfig.playerBarHideDuringEvents and eventSystemActive)) then
+				playerBar.SetHidden(true);
+			else
+				playerBar.DrawWindow(gAdjustedSettings.playerBarSettings);
+			end
+			if (not gConfig.showTargetBar or (gConfig.targetBarHideDuringEvents and eventSystemActive)) then
+				targetBar.SetHidden(true);
+			else
+				targetBar.DrawWindow(gAdjustedSettings.targetBarSettings);
+			end
+			if (gConfig.showEnemyList) then
+				enemyList.DrawWindow(gAdjustedSettings.enemyListSettings);
+			end
+			if (gConfig.showExpBar) then
+				expBar.DrawWindow(gAdjustedSettings.expBarSettings);
+			end
+			if (gConfig.showGilTracker) then
+				gilTracker.DrawWindow(gAdjustedSettings.gilTrackerSettings);
+			end
+			if (gConfig.showInventoryTracker) then
+				inventoryTracker.DrawWindow(gAdjustedSettings.inventoryTrackerSettings);
+			end
+			if (not gConfig.showPartyList or (gConfig.partyListHideDuringEvents and eventSystemActive)) then
+				partyList.SetHidden(true);
+			else
+				partyList.DrawWindow(gAdjustedSettings.partyListSettings);
+			end
+			if (gConfig.showCastBar) then
+				castBar.DrawWindow(gAdjustedSettings.castBarSettings);
+			end
+	
+			configMenu.DrawWindow();
+	
+			if (gConfig.patchNotesVer < gAdjustedSettings.currentPatchVer) then
+				patchNotes.DrawWindow();
+			end
+		else
+			ForceHide();
 		end
-        if (not gConfig.showTargetBar or (gConfig.targetBarHideDuringEvents and eventSystemActive)) then
-            targetBar.SetHidden(true);
-        else
-			targetBar.DrawWindow(gAdjustedSettings.targetBarSettings);
+	
+		-- HXUI DEV ONLY
+		if _HXUI_DEV_HOT_RELOADING_ENABLED then
+			local currentTime = os.time();
+	
+			if not _HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME then
+				_HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME = currentTime;
+			end
+	
+			if _HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME and currentTime - _HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME > _HXUI_DEV_HOT_RELOAD_POLL_TIME_SECONDS then
+				_check_hot_reload();
+	
+				_HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME = currentTime;
+			end
 		end
-		if (gConfig.showEnemyList) then
-			enemyList.DrawWindow(gAdjustedSettings.enemyListSettings);
-		end
-		if (gConfig.showExpBar) then
-			expBar.DrawWindow(gAdjustedSettings.expBarSettings);
-		end
-		if (gConfig.showGilTracker) then
-			gilTracker.DrawWindow(gAdjustedSettings.gilTrackerSettings);
-		end
-		if (gConfig.showInventoryTracker) then
-			inventoryTracker.DrawWindow(gAdjustedSettings.inventoryTrackerSettings);
-		end
-        if (not gConfig.showPartyList or (gConfig.partyListHideDuringEvents and eventSystemActive)) then
-            partyList.SetHidden(true);
-        else
-			partyList.DrawWindow(gAdjustedSettings.partyListSettings);
-		end
-		if (gConfig.showCastBar) then
-			castBar.DrawWindow(gAdjustedSettings.castBarSettings);
-		end
-
-		configMenu.DrawWindow();
-
-		if (gConfig.patchNotesVer < gAdjustedSettings.currentPatchVer) then
-			patchNotes.DrawWindow();
-		end
-	else
-		ForceHide();
-	end
-
-	-- HXUI DEV ONLY
-	if _HXUI_DEV_HOT_RELOADING_ENABLED then
-		local currentTime = os.time();
-
-		if not _HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME then
-			_HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME = currentTime;
-		end
-
-		if _HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME and currentTime - _HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME > _HXUI_DEV_HOT_RELOAD_POLL_TIME_SECONDS then
-			_check_hot_reload();
-
-			_HXUI_DEV_HOT_RELOAD_LAST_RELOAD_TIME = currentTime;
-		end
-	end
+	end)
+	.catch(function(ex)
+		--print(ex.message)
+		--print(ex.traceback)
+	end)
+	.finally(function ()
+		--print("finally do something...")
+	end)
 end);
 
 ashita.events.register('load', 'load_cb', function ()
