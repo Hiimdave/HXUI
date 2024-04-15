@@ -43,7 +43,7 @@ local debuffHandler = require('debuffhandler');
 local patchNotes = require('patchNotes');
 local statusHandler = require('statushandler');
 local gdi = require('gdifonts.include');
-local try = require("try-catch").try
+local try = require('libs/try-catch').try
 
 -- =================
 -- = HXUI DEV ONLY =

@@ -1,4 +1,4 @@
-local class = require ("middleclass")
+local class = require ('libs/middleclass');
 local _container = nil
 
 
